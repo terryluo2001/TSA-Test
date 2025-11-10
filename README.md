@@ -7,8 +7,6 @@ Since I was busy, I started this project today and used Claude to help me code a
 
 Since I used Claude to code in React.js, I was mostly focussed on functionality rather than styling.
 
-I also used MySQL to store the tasks in a database which I will provide the database in email.
-
 Set up instructions
 
 To run the frontend. Go inside TSA-frontend:
@@ -25,3 +23,10 @@ cd TSA-backend
 run python app.py
 
 In the future, I would make some time to start this project earlier, and also use less AI for the frontend so I can understand the code better and be able to fix the styling myself. This is something I've been working on by making AI do small things at a time and taking the time to proof read the code in intervals each time.
+
+My database details are:
+DB_HOST=61.69.238.31
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=todolist_db
