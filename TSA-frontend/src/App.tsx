@@ -1,35 +1,92 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
+import Sidebar from './components/Sidebar';
+import Dashboard from './components/Dashboard';
+import TaskList from './components/TaskList';
+import type { Task, TaskStats } from './services/api';
+import { apiService } from './services/api';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [stats, setStats] = useState<TaskStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const [tasksResponse, statsResponse] = await Promise.all([
+        apiService.getTasks(),
+        apiService.getStats(),
+      ]);
+
+      if (tasksResponse.success && tasksResponse.data) {
+        setTasks(tasksResponse.data);
+      } else {
+        setError(`Failed to fetch tasks: ${tasksResponse.error}`);
+      }
+
+      if (statsResponse.success && statsResponse.data) {
+        setStats(statsResponse.data);
+      } else {
+        setError(`Failed to fetch stats: ${statsResponse.error}`);
+      }
+    } catch {
+      setError('Network error: Unable to connect to the server');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleTasksChange = () => {
+    fetchData();
+  };
+
+  const renderMainContent = () => {
+    switch (currentView) {
+      case 'dashboard':
+        return <Dashboard stats={stats} loading={loading} />;
+      case 'tasks':
+        return (
+          <div className="tasks-page">
+            <TaskList tasks={tasks} onTasksChange={handleTasksChange} />
+          </div>
+        );
+      default:
+        return (
+          <div className="placeholder-page">
+            <h1>{currentView.charAt(0).toUpperCase() + currentView.slice(1)}</h1>
+            <p>This section is coming soon...</p>
+          </div>
+        );
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="app">
+      <Sidebar currentView={currentView} onViewChange={setCurrentView} />
+      
+      <main className="main-content">
+        {error && (
+          <div className="error-banner">
+            <p>⚠️ {error}</p>
+            <button onClick={fetchData} className="btn-secondary">
+              Retry
+            </button>
+          </div>
+        )}
+        
+        {renderMainContent()}
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
